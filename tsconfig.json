@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@users/*": ["src/users/*"],
+      "@auth/*": ["src/auth/*"]
+    },
     "module": "commonjs",
     "declaration": true,
     "removeComments": true,

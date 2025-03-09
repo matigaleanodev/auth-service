@@ -24,6 +24,9 @@ export class UserEntity implements UserInterface {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
+  @Column({ nullable: true })
+  refreshToken: string | null;
+
   @BeforeInsert()
   @BeforeUpdate()
   emailToLowerCase() {
