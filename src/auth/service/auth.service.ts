@@ -1,11 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  HttpException,
+  HttpStatus,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { UserEntity } from '../users/models/user.entity';
+import { UserEntity } from '@users/models/user.entity';
 import { LoginUserDTO } from '@users/dto/login-user.dto';
 import { ConfigService } from '@nestjs/config';
 
@@ -26,15 +30,52 @@ export class AuthService {
   async login({ email, password }: LoginUserDTO) {
     const user = await this.userRepository.findOne({
       where: { email },
+      select: ['id', 'email', 'password', 'refreshToken'], // Asegura que traiga estos campos
     });
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      throw new UnauthorizedException('Credenciales incorrectas');
+    }
+
+    const passwordsMatch = await bcrypt.compare(password, user.password);
+    if (!passwordsMatch) {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshToken(user.id, tokens.refresh_token);
     return tokens;
+  }
+
+  /**
+   * Busca un usuario por su email.
+   * @param email Email del usuario.
+   * @returns Usuario encontrado o null.
+   */
+  private async findUserByEmail(email: string): Promise<UserEntity | null> {
+    return this.userRepository.findOne({
+      where: { email },
+      select: ['id', 'email', 'name', 'password', 'refreshToken'],
+    });
+  }
+
+  /**
+   * Valida si la contraseña ingresada es correcta.
+   * @param password Contraseña ingresada.
+   * @param storedPasswordHash Hash de la contraseña almacenada.
+   * @returns Booleano indicando si coinciden.
+   */
+  private async validatePassword(
+    password: string,
+    storedPasswordHash: string,
+  ): Promise<boolean> {
+    if (typeof bcrypt.compare === 'function') {
+      return await bcrypt.compare(password, storedPasswordHash);
+    } else {
+      throw new InternalServerErrorException(
+        'Bcrypt compare function not available',
+      );
+    }
   }
 
   /**
@@ -77,10 +118,7 @@ export class AuthService {
    */
   private async updateRefreshToken(userId: number, refreshToken: string) {
     try {
-      const hashedRefreshToken = (await bcrypt.hash(
-        refreshToken,
-        10,
-      )) as string;
+      const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
       await this.userRepository.update(userId, {
         refreshToken: hashedRefreshToken,
       });

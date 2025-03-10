@@ -24,7 +24,7 @@ export class UserEntity implements UserInterface {
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken: string | null;
 
   @BeforeInsert()

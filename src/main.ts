@@ -8,6 +8,7 @@ async function bootstrap() {
     AppModule,
     microserviceConfig,
   );
+
   await app.listen();
 }
 void bootstrap();

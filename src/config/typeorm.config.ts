@@ -1,5 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { UserEntity } from '@users/models/user.entity';
 
 export const getTypeOrmConfig = (
   configService: ConfigService,
@@ -10,7 +11,7 @@ export const getTypeOrmConfig = (
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
   database: configService.get<string>('DB_DATABASE'),
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  entities: [UserEntity],
   migrations: [__dirname + '/migration/*.ts'],
   synchronize: true,
 });
