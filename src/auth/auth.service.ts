@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -63,8 +65,8 @@ export class AuthService {
       ),
     ]);
     return {
-      access_token: access_token as string,
-      refresh_token: refresh_token as string,
+      access_token: access_token,
+      refresh_token: refresh_token,
     };
   }
 
@@ -85,5 +87,26 @@ export class AuthService {
     } catch {
       throw new Error('Error hashing the refresh token');
     }
+  }
+
+  /**
+   * Refresca el access token si el refresh token es válido.
+   * @param refreshToken Token de refresco.
+   * @returns Nuevo access token y refresh token.
+   */
+  async refreshToken(refreshToken: string) {
+    if (!refreshToken) {
+      throw new UnauthorizedException('Refresh token requerido');
+    }
+
+    const user = await this.userRepository.findOne({
+      where: { refreshToken },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Refresh token inválido');
+    }
+
+    return this.getTokens(user.id, user.email);
   }
 }
