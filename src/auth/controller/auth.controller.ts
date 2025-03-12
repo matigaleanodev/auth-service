@@ -40,4 +40,16 @@ export class AuthController {
   async refreshToken(@Payload() refreshToken: string) {
     return this.authService.refreshToken(refreshToken);
   }
+
+  @MessagePattern('auth.request-password-reset')
+  async requestPasswordReset(@Payload() { email }: { email: string }) {
+    return this.authService.requestPasswordReset(email);
+  }
+
+  @MessagePattern('auth.reset-password')
+  async resetPassword(
+    @Payload() { token, newPassword }: { token: string; newPassword: string },
+  ) {
+    return this.authService.resetPassword(token, newPassword);
+  }
 }

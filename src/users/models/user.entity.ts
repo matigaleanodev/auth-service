@@ -27,6 +27,12 @@ export class UserEntity implements UserInterface {
   @Column({ type: 'varchar', length: 255, nullable: true })
   refreshToken: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  resetPasswordToken: string;
+
+  @Column({ nullable: true, type: 'timestamp' })
+  resetPasswordExpires: Date;
+
   @BeforeInsert()
   @BeforeUpdate()
   emailToLowerCase() {

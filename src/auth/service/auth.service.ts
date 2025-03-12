@@ -147,4 +147,51 @@ export class AuthService {
 
     return this.getTokens(user.id, user.email);
   }
+
+  /**
+   * Genera un token de recuperación de contraseña y lo envía por email.
+   * @param email Email del usuario.
+   */
+  async requestPasswordReset(email: string) {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = await bcrypt.hash(resetToken, 10);
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hora de validez
+
+    await this.userRepository.save(user);
+
+    // Aquí deberías integrar el servicio de envío de emails
+    return { message: 'Email de recuperación enviado', resetToken };
+  }
+
+  /**
+   * Permite cambiar la contraseña usando el token de recuperación.
+   * @param token Token enviado por email.
+   * @param newPassword Nueva contraseña del usuario.
+   */
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.userRepository.findOne({
+      where: { resetPasswordToken: Not(IsNull()) },
+    });
+
+    if (!user || !(await bcrypt.compare(token, user.resetPasswordToken))) {
+      throw new UnauthorizedException('Token inválido o expirado');
+    }
+
+    if (new Date() > user.resetPasswordExpires) {
+      throw new UnauthorizedException('Token expirado');
+    }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+
+    await this.userRepository.save(user);
+    return { message: 'Contraseña actualizada correctamente' };
+  }
 }
