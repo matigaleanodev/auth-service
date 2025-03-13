@@ -1,13 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Injectable,
   UnauthorizedException,
-  HttpException,
-  HttpStatus,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UserEntity } from '@users/models/user.entity';
 import { LoginUserDTO } from '@users/dto/login-user.dto';
@@ -188,8 +192,8 @@ export class AuthService {
     }
 
     user.password = await bcrypt.hash(newPassword, 10);
-    user.resetPasswordToken = null;
-    user.resetPasswordExpires = null;
+    user.resetPasswordToken = '';
+    user.resetPasswordExpires = null as unknown as Date;
 
     await this.userRepository.save(user);
     return { message: 'Contraseña actualizada correctamente' };

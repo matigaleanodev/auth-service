@@ -1,16 +1,14 @@
-import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UserEntity } from '@users/models/user.entity';
 
-export const getTypeOrmConfig = (
-  configService: ConfigService,
-): TypeOrmModuleOptions => ({
+export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'mysql',
-  host: configService.get<string>('DB_HOST'),
+  host: process.env.DB_HOST,
   port: 3306,
-  username: configService.get<string>('DB_USERNAME'),
-  password: configService.get<string>('DB_PASSWORD'),
-  database: configService.get<string>('DB_DATABASE'),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
+  url: process.env.DB_URL,
   entities: [UserEntity],
   migrations: [__dirname + '/migration/*.ts'],
   synchronize: true,

@@ -1,7 +1,7 @@
 import { Controller, UnauthorizedException } from '@nestjs/common';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
-import { AuthService } from '@auth/service/auth.service';
 import { LoginUserDTO } from '@users/dto/login-user.dto';
+import { AuthService } from 'src/service/auth.service';
 
 @Controller()
 export class AuthController {
