@@ -1,11 +1,15 @@
 import { Controller, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { LoginUserDTO } from '@users/dto/login-user.dto';
 import { AuthService } from 'src/service/auth.service';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   /**
    * Maneja la autenticación de usuarios.
@@ -51,5 +55,17 @@ export class AuthController {
     @Payload() { token, newPassword }: { token: string; newPassword: string },
   ) {
     return this.authService.resetPassword(token, newPassword);
+  }
+
+  @MessagePattern('auth.validate-token')
+  validateToken(data: { token: string }) {
+    try {
+      const payload = this.jwtService.verify<{ userId: string; email: string }>(
+        data.token,
+      );
+      return { isValid: true, user: payload };
+    } catch {
+      return { isValid: false };
+    }
   }
 }
