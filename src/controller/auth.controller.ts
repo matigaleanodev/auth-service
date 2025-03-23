@@ -1,4 +1,5 @@
 import { Controller, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { LoginUserDTO } from '@users/dto/login-user.dto';
@@ -9,6 +10,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -60,12 +62,20 @@ export class AuthController {
   @MessagePattern('auth.validate-token')
   validateToken(data: { token: string }) {
     try {
-      const payload = this.jwtService.verify<{ userId: string; email: string }>(
-        data.token,
-      );
+      const payload = this.jwtService.verify(data.token, {
+        secret: this.configService.get('SECRET_KEY'),
+        algorithms: ['HS256'],
+      });
+
       return { isValid: true, user: payload };
-    } catch {
-      return { isValid: false };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token expirado');
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new UnauthorizedException('Token inválido');
+      }
+      throw new UnauthorizedException('Error al verificar el token');
     }
   }
 }
