@@ -37,7 +37,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.27"
+    "typeorm": "^0.3.31"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
